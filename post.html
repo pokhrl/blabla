@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' fonts.googleapis.com; font-src fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' api.github.com raw.githubusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'none';" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
+<title>p0khrl / article</title>
+<link rel="icon" type="image/png" href="avatar.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>:root{--red:#a71f0c;--red-dark:#7a160a;--black:#0a0a0a;--ink:#1c1512;--gray:#5c757a;--line:#e4ded2;--paper:#faf6ef;--mono:'JetBrains Mono',ui-monospace,monospace;--display:'Space Grotesk',sans-serif;--body:'Inter',sans-serif}*{box-sizing:border-box}body{font-family:var(--body);line-height:1.7;margin:0;padding:0;background:radial-gradient(circle at 1px 1px,#ece4d5 1px,transparent 0) 0 0/28px 28px,var(--paper);color:var(--ink);font-size:17px}
+a{color:var(--red-dark);text-decoration:none}a:hover{text-decoration:underline}a:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.article-page{max-width:680px;margin:0 auto;padding:5.5rem 2rem 5rem}
+.article-back{font-family:var(--mono);font-size:.82rem;color:var(--gray);text-decoration:none;display:inline-flex;align-items:center;gap:.4rem}
+.article-back:hover{color:var(--red);text-decoration:none}
+.article-date{font-family:var(--mono);font-size:.8rem;color:var(--gray);margin:1.6rem 0 .6rem}
+.article-title{font-family:var(--display);font-weight:800;font-size:clamp(1.8rem,5vw,2.6rem);line-height:1.15;color:var(--black);margin:0 0 1.8rem}
+.post-content{font-size:.98rem}
+.post-content p{margin:0 0 1.2rem}
+.post-content h1,.post-content h2,.post-content h3{font-family:var(--display);margin:1.8rem 0 .9rem;color:var(--black)}
+.post-content pre{background:var(--black);color:#f2f2f2;padding:1.2rem;border-radius:10px;overflow-x:auto;font-size:.82rem;font-family:var(--mono)}
+.post-content code{background:#f0ebe0;color:var(--red-dark);padding:.1rem .35rem;border-radius:5px;font-size:.88em;font-family:var(--mono)}
+.post-content pre code{background:0 0;padding:0;color:inherit}
+.post-content img{max-width:100%;border-radius:10px;border:1.5px solid var(--black)}
+.post-content ol,.post-content ul{padding-left:1.4rem}
+.status{color:var(--gray);font-size:.9rem;font-family:var(--mono)}
+footer{padding:2.5rem 0 3rem;color:var(--gray);font-family:var(--mono);font-size:.75rem;text-align:center}
+@media (max-width:640px){.article-page{padding:4rem 1.4rem 3rem}}
+</style>
+</head>
+<body>
+  <div class="article-page">
+    <a href="index.html#top" class="article-back">&larr; back to p0khrl_</a>
+    <p class="article-date" id="article-date"></p>
+    <h1 class="article-title" id="article-title">Loading…</h1>
+    <div class="post-content" id="article-content"><p class="status">Loading…</p></div>
+  </div>
+  <footer>root@p0khrl</footer>
+
+  <script>
+    const OWNER = "pokhrl", REPO = "blabla", BRANCH = "main", BLOG_DIR = "blog";
+    const params = new URLSearchParams(location.search);
+    const filename = params.get("post");
+    const POST_RE = /^(\d{4}-\d{2}-\d{2})-(.+)\.md$/;
+    const titleEl = document.getElementById("article-title");
+    const dateEl = document.getElementById("article-date");
+    const contentEl = document.getElementById("article-content");
+
+    (async function loadPost() {
+      if (!filename || !POST_RE.test(filename)) {
+        titleEl.textContent = "Post not found";
+        contentEl.innerHTML = '<p class="status">No valid post was specified.</p>';
+        return;
+      }
+      const [, date] = filename.match(POST_RE);
+      dateEl.textContent = date;
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${BLOG_DIR}/${filename}`);
+        if (!res.ok) throw new Error("File not found (" + res.status + ")");
+        let text = await res.text();
+        const lines = text.split("\n");
+        const firstIdx = lines.findIndex(l => l.trim().length > 0);
+        let title = filename;
+        if (firstIdx !== -1 && lines[firstIdx].trim().startsWith("#")) {
+          title = lines[firstIdx].replace(/^#+\s*/, "").trim();
+          lines.splice(firstIdx, 1);
+          text = lines.join("\n");
+        }
+        document.title = title + " / p0khrl";
+        titleEl.textContent = title;
+        contentEl.innerHTML = marked.parse(text);
+      } catch (err) {
+        titleEl.textContent = "Couldn't load this post";
+        contentEl.innerHTML = `<p class="status">${err.message}. If this keeps happening, GitHub's API may be rate-limiting anonymous requests — try again in a bit.</p>`;
+      }
+    })();
+  </script>
+  <script>(()=>{document.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&['i','j','c'].includes(k))||(e.ctrlKey&&k==='u')){e.preventDefault()}});})();</script>
+</body>
+</html>
